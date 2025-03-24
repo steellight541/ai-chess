@@ -4,16 +4,414 @@ import chess.pgn
 import random
 import json
 from collections import Counter
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, QLineEdit
+from PyQt5.QtWidgets import (
+    QApplication,
+    QWidget,
+    QVBoxLayout,
+    QPushButton,
+    QLabel,
+    QLineEdit,
+)
 from PyQt5.QtSvg import QSvgWidget
 from PyQt5.QtCore import QByteArray, QTimer, pyqtSignal, QObject, QThread
 
-PAWN_TABLE = [0, 0, 0, 0, 0, 0, 0, 0, 50, 50, 50, 50, 50, 50, 50, 50, 10, 10, 20, 30, 30, 20, 10, 10, 5, 5, 10, 25, 25, 10, 5, 5, 0, 0, 0, 20, 20, 0, 0, 0, 5, -5, -10, 0, 0, -10, -5, 5, 5, 10, 10, -20, -20, 10, 10, 5, 0, 0, 0, 0, 0, 0, 0, 0]
-KNIGHT_TABLE = [-50, -40, -30, -30, -30, -30, -40, -50, -40, -20, 0, 0, 0, 0, -20, -40, -30, 0, 10, 15, 15, 10, 0, -30, -30, 5, 15, 20, 20, 15, 5, -30, -30, 0, 15, 20, 20, 15, 0, -30, -30, 5, 10, 15, 15, 10, 5, -30, -40, -20, 0, 5, 5, 0, -20, -40, -50, -40, -30, -30, -30, -30, -40, -50]
-BISHOP_TABLE = [-20, -10, -10, -10, -10, -10, -10, -20, -10, 0, 0, 0, 0, 0, 0, -10, -10, 0, 5, 10, 10, 5, 0, -10, -10, 5, 5, 10, 10, 5, 5, -10, -10, 0, 10, 10, 10, 10, 0, -10, -10, 10, 10, 10, 10, 10, 10, -10, -10, 5, 0, 0, 0, 0, 5, -10, -20, -10, -10, -10, -10, -10, -10, -20]
-ROOK_TABLE = [0, 0, 0, 0, 0, 0, 0, 0, 5, 10, 10, 10, 10, 10, 10, 5, -5, 0, 0, 0, 0, 0, 0, -5, -5, 0, 0, 0, 0, 0, 0, -5, -5, 0, 0, 0, 0, 0, 0, -5, -5, 0, 0, 0, 0, 0, 0, -5, -5, 0, 0, 0, 0, 0, 0, -5, 0, 0, 0, 5, 5, 0, 0, 0]
-QUEEN_TABLE = [-20, -10, -10, -5, -5, -10, -10, -20, -10, 0, 0, 0, 0, 0, 0, -10, -10, 0, 5, 5, 5, 5, 0, -10, -5, 0, 5, 5, 5, 5, 0, -5, 0, 0, 5, 5, 5, 5, 0, -5, -10, 5, 5, 5, 5, 5, 0, -10, -10, 0, 5, 0, 0, 0, 0, -10, -20, -10, -10, -5, -5, -10, -10, -20]
-KING_TABLE = [-30, -40, -40, -50, -50, -40, -40, -30, -30, -40, -40, -50, -50, -40, -40, -30, -30, -40, -40, -50, -50, -40, -40, -30, -30, -40, -40, -50, -50, -40, -40, -30, -20, -30, -30, -40, -40, -30, -30, -20, -10, -20, -20, -20, -20, -20, -20, -10, 20, 20, 0, 0, 0, 0, 20, 20, 20, 30, 10, 0, 0, 10, 30, 20]
+PAWN_TABLE = [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    50,
+    50,
+    50,
+    50,
+    50,
+    50,
+    50,
+    50,
+    10,
+    10,
+    20,
+    30,
+    30,
+    20,
+    10,
+    10,
+    5,
+    5,
+    10,
+    25,
+    25,
+    10,
+    5,
+    5,
+    0,
+    0,
+    0,
+    20,
+    20,
+    0,
+    0,
+    0,
+    5,
+    -5,
+    -10,
+    0,
+    0,
+    -10,
+    -5,
+    5,
+    5,
+    10,
+    10,
+    -20,
+    -20,
+    10,
+    10,
+    5,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+]
+KNIGHT_TABLE = [
+    -50,
+    -40,
+    -30,
+    -30,
+    -30,
+    -30,
+    -40,
+    -50,
+    -40,
+    -20,
+    0,
+    0,
+    0,
+    0,
+    -20,
+    -40,
+    -30,
+    0,
+    10,
+    15,
+    15,
+    10,
+    0,
+    -30,
+    -30,
+    5,
+    15,
+    20,
+    20,
+    15,
+    5,
+    -30,
+    -30,
+    0,
+    15,
+    20,
+    20,
+    15,
+    0,
+    -30,
+    -30,
+    5,
+    10,
+    15,
+    15,
+    10,
+    5,
+    -30,
+    -40,
+    -20,
+    0,
+    5,
+    5,
+    0,
+    -20,
+    -40,
+    -50,
+    -40,
+    -30,
+    -30,
+    -30,
+    -30,
+    -40,
+    -50,
+]
+BISHOP_TABLE = [
+    -20,
+    -10,
+    -10,
+    -10,
+    -10,
+    -10,
+    -10,
+    -20,
+    -10,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    -10,
+    -10,
+    0,
+    5,
+    10,
+    10,
+    5,
+    0,
+    -10,
+    -10,
+    5,
+    5,
+    10,
+    10,
+    5,
+    5,
+    -10,
+    -10,
+    0,
+    10,
+    10,
+    10,
+    10,
+    0,
+    -10,
+    -10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    -10,
+    -10,
+    5,
+    0,
+    0,
+    0,
+    0,
+    5,
+    -10,
+    -20,
+    -10,
+    -10,
+    -10,
+    -10,
+    -10,
+    -10,
+    -20,
+]
+ROOK_TABLE = [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    5,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    5,
+    -5,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    -5,
+    -5,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    -5,
+    -5,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    -5,
+    -5,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    -5,
+    -5,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    -5,
+    0,
+    0,
+    0,
+    5,
+    5,
+    0,
+    0,
+    0,
+]
+QUEEN_TABLE = [
+    -20,
+    -10,
+    -10,
+    -5,
+    -5,
+    -10,
+    -10,
+    -20,
+    -10,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    -10,
+    -10,
+    0,
+    5,
+    5,
+    5,
+    5,
+    0,
+    -10,
+    -5,
+    0,
+    5,
+    5,
+    5,
+    5,
+    0,
+    -5,
+    0,
+    0,
+    5,
+    5,
+    5,
+    5,
+    0,
+    -5,
+    -10,
+    5,
+    5,
+    5,
+    5,
+    5,
+    0,
+    -10,
+    -10,
+    0,
+    5,
+    0,
+    0,
+    0,
+    0,
+    -10,
+    -20,
+    -10,
+    -10,
+    -5,
+    -5,
+    -10,
+    -10,
+    -20,
+]
+KING_TABLE = [
+    -30,
+    -40,
+    -40,
+    -50,
+    -50,
+    -40,
+    -40,
+    -30,
+    -30,
+    -40,
+    -40,
+    -50,
+    -50,
+    -40,
+    -40,
+    -30,
+    -30,
+    -40,
+    -40,
+    -50,
+    -50,
+    -40,
+    -40,
+    -30,
+    -30,
+    -40,
+    -40,
+    -50,
+    -50,
+    -40,
+    -40,
+    -30,
+    -20,
+    -30,
+    -30,
+    -40,
+    -40,
+    -30,
+    -30,
+    -20,
+    -10,
+    -20,
+    -20,
+    -20,
+    -20,
+    -20,
+    -20,
+    -10,
+    20,
+    20,
+    0,
+    0,
+    0,
+    0,
+    20,
+    20,
+    20,
+    30,
+    10,
+    0,
+    0,
+    10,
+    30,
+    20,
+]
+
 
 class ChessBoardWidget(QSvgWidget):
     pieceMoved = pyqtSignal(int, int)
@@ -46,6 +444,7 @@ class ChessBoardWidget(QSvgWidget):
         self.drag_start_square = None
         event.accept()
 
+
 class ChessAI(QWidget):
     def __init__(self):
         super().__init__()
@@ -61,9 +460,6 @@ class ChessAI(QWidget):
         self.move_input.setPlaceholderText("Enter your move in UCI format (e.g. e2e4)")
         self.move_input.returnPressed.connect(self.make_move)
         self.layout.addWidget(self.move_input)
-        self.move_button = QPushButton("Make Move")
-        self.move_button.clicked.connect(self.make_move)
-        self.layout.addWidget(self.move_button)
         self.ai_vs_ai_button = QPushButton("Start AI vs AI")
         self.ai_vs_ai_button.clicked.connect(self.start_ai_vs_ai)
         self.layout.addWidget(self.ai_vs_ai_button)
@@ -83,15 +479,20 @@ class ChessAI(QWidget):
             piece = self.board.piece_at(square)
             if piece and piece.color == self.board.turn:
                 self.selected_square = square
-                self.possible_moves = [move.to_square for move in self.board.legal_moves if move.from_square == square]
+                self.possible_moves = [
+                    move.to_square
+                    for move in self.board.legal_moves
+                    if move.from_square == square
+                ]
             else:
                 self.selected_square = None
                 self.possible_moves = []
         else:
             move = chess.Move(self.selected_square, square)
-            if (self.board.piece_type_at(self.selected_square) == chess.PAWN and
-                ((self.board.turn == chess.WHITE and chess.square_rank(square) == 7) or
-                 (self.board.turn == chess.BLACK and chess.square_rank(square) == 0))):
+            if self.board.piece_type_at(self.selected_square) == chess.PAWN and (
+                (self.board.turn == chess.WHITE and chess.square_rank(square) == 7)
+                or (self.board.turn == chess.BLACK and chess.square_rank(square) == 0)
+            ):
                 move.promotion = chess.QUEEN
             if move in self.board.legal_moves:
                 self.board.push(move)
@@ -103,7 +504,11 @@ class ChessAI(QWidget):
                 piece = self.board.piece_at(square)
                 if piece and piece.color == self.board.turn:
                     self.selected_square = square
-                    self.possible_moves = [move.to_square for move in self.board.legal_moves if move.from_square == square]
+                    self.possible_moves = [
+                        move.to_square
+                        for move in self.board.legal_moves
+                        if move.from_square == square
+                    ]
                 else:
                     self.selected_square = None
                     self.possible_moves = []
@@ -124,8 +529,9 @@ class ChessAI(QWidget):
         if move not in self.board.legal_moves:
             piece = self.board.piece_at(from_square)
             if piece and piece.piece_type == chess.PAWN:
-                if (piece.color == chess.WHITE and chess.square_rank(to_square) == 7) or \
-                   (piece.color == chess.BLACK and chess.square_rank(to_square) == 0):
+                if (
+                    piece.color == chess.WHITE and chess.square_rank(to_square) == 7
+                ) or (piece.color == chess.BLACK and chess.square_rank(to_square) == 0):
                     move = chess.Move(from_square, to_square, promotion=chess.QUEEN)
         if move in self.board.legal_moves:
             self.board.push(move)
@@ -144,7 +550,7 @@ class ChessAI(QWidget):
                 return
             if move not in self.board.legal_moves:
                 if len(user_input) == 4:
-                    move = chess.Move.from_uci(user_input + 'q')
+                    move = chess.Move.from_uci(user_input + "q")
                     if move not in self.board.legal_moves:
                         return
                 else:
@@ -183,7 +589,7 @@ class ChessAI(QWidget):
 
     def load_openings(self, json_filepath):
         try:
-            with open(json_filepath, 'r') as json_file:
+            with open(json_filepath, "r") as json_file:
                 return json.load(json_file)
         except FileNotFoundError:
             return {}
@@ -197,17 +603,31 @@ class ChessAI(QWidget):
             piece = self.board.piece_at(square)
             if piece:
                 color_factor = 1 if piece.color == chess.WHITE else -1
-                table_square = square if piece.color == chess.WHITE else chess.square_mirror(square)
+                table_square = (
+                    square
+                    if piece.color == chess.WHITE
+                    else chess.square_mirror(square)
+                )
                 if piece.piece_type == chess.PAWN:
-                    eval_score += PAWN_TABLE[table_square] * color_factor + 100 * color_factor
+                    eval_score += (
+                        PAWN_TABLE[table_square] * color_factor + 100 * color_factor
+                    )
                 elif piece.piece_type == chess.KNIGHT:
-                    eval_score += KNIGHT_TABLE[table_square] * color_factor + 300 * color_factor
+                    eval_score += (
+                        KNIGHT_TABLE[table_square] * color_factor + 300 * color_factor
+                    )
                 elif piece.piece_type == chess.BISHOP:
-                    eval_score += BISHOP_TABLE[table_square] * color_factor + 300 * color_factor
+                    eval_score += (
+                        BISHOP_TABLE[table_square] * color_factor + 300 * color_factor
+                    )
                 elif piece.piece_type == chess.ROOK:
-                    eval_score += ROOK_TABLE[table_square] * color_factor + 500 * color_factor
+                    eval_score += (
+                        ROOK_TABLE[table_square] * color_factor + 500 * color_factor
+                    )
                 elif piece.piece_type == chess.QUEEN:
-                    eval_score += QUEEN_TABLE[table_square] * color_factor + 900 * color_factor
+                    eval_score += (
+                        QUEEN_TABLE[table_square] * color_factor + 900 * color_factor
+                    )
                 elif piece.piece_type == chess.KING:
                     eval_score += KING_TABLE[table_square] * color_factor
         return eval_score
@@ -216,10 +636,10 @@ class ChessAI(QWidget):
         if depth == 0 or self.board.is_game_over():
             return self.evaluate_board()
         if maximizing_player:
-            max_eval = -float('inf')
+            max_eval = -float("inf")
             for move in self.order_moves(self.board.legal_moves):
                 self.board.push(move)
-                eval = self.alpha_beta(depth-1, alpha, beta, False)
+                eval = self.alpha_beta(depth - 1, alpha, beta, False)
                 self.board.pop()
                 max_eval = max(max_eval, eval)
                 alpha = max(alpha, eval)
@@ -227,10 +647,10 @@ class ChessAI(QWidget):
                     break
             return max_eval
         else:
-            min_eval = float('inf')
+            min_eval = float("inf")
             for move in self.order_moves(self.board.legal_moves):
                 self.board.push(move)
-                eval = self.alpha_beta(depth-1, alpha, beta, True)
+                eval = self.alpha_beta(depth - 1, alpha, beta, True)
                 self.board.pop()
                 min_eval = min(min_eval, eval)
                 beta = min(beta, eval)
@@ -252,29 +672,42 @@ class ChessAI(QWidget):
 
     def best_move(self, depth=4):
         search_depth = depth
-        fen_parts = self.board.fen().split(' ')
-        normalized_fen = ' '.join(fen_parts[:4])
+        fen_parts = self.board.fen().split(" ")
+        normalized_fen = " ".join(fen_parts[:4])
         if normalized_fen in self.openings:
-            possible_moves = [chess.Move.from_uci(uci) for uci in self.openings[normalized_fen]]
-            legal_moves = [move for move in possible_moves if move in self.board.legal_moves]
+            possible_moves = [
+                chess.Move.from_uci(uci) for uci in self.openings[normalized_fen]
+            ]
+            legal_moves = [
+                move for move in possible_moves if move in self.board.legal_moves
+            ]
             if legal_moves:
-                move_uci = Counter(move.uci() for move in legal_moves).most_common(1)[0][0]
-                return chess.Move.from_uci(move_uci)
-        best_move_found = None
-        best_eval = -float('inf') if self.board.turn == chess.WHITE else float('inf')
+                return random.choice(legal_moves)  # Changed to random choice
+        best_moves = []
+        best_eval = -float("inf") if self.board.turn == chess.WHITE else float("inf")
         maximizing = self.board.turn == chess.WHITE
         for move in self.order_moves(self.board.legal_moves):
             self.board.push(move)
-            eval = self.alpha_beta(search_depth - 1, -float('inf'), float('inf'), not maximizing)
+            eval = self.alpha_beta(
+                search_depth - 1, -float("inf"), float("inf"), not maximizing
+            )
             self.board.pop()
-            if (maximizing and eval > best_eval) or (not maximizing and eval < best_eval):
+            if (maximizing and eval > best_eval) or (
+                not maximizing and eval < best_eval
+            ):
                 best_eval = eval
-                best_move_found = move
-        return best_move_found or random.choice(list(self.board.legal_moves))
+                best_moves = [move]
+            elif eval == best_eval:
+                best_moves.append(move)
+        if best_moves:
+            return random.choice(best_moves)
+        else:
+            return random.choice(list(self.board.legal_moves))
+
 
 class AIWorker(QObject):
     finished = pyqtSignal(chess.Move)
-    
+
     def __init__(self, board, openings):
         super().__init__()
         self.board = board
@@ -285,34 +718,46 @@ class AIWorker(QObject):
 
     def calculate_best_move(self):
         search_depth = 4
-        fen_parts = self.board.fen().split(' ')
-        normalized_fen = ' '.join(fen_parts[:4])
+        fen_parts = self.board.fen().split(" ")
+        normalized_fen = " ".join(fen_parts[:4])
         if normalized_fen in self.openings:
-            possible_moves = [chess.Move.from_uci(uci) for uci in self.openings[normalized_fen]]
-            legal_moves = [move for move in possible_moves if move in self.board.legal_moves]
+            possible_moves = [
+                chess.Move.from_uci(uci) for uci in self.openings[normalized_fen]
+            ]
+            legal_moves = [
+                move for move in possible_moves if move in self.board.legal_moves
+            ]
             if legal_moves:
-                move_uci = Counter(move.uci() for move in legal_moves).most_common(1)[0][0]
-                return chess.Move.from_uci(move_uci)
-        best_move_found = None
-        best_eval = -float('inf') if self.board.turn == chess.WHITE else float('inf')
+                return random.choice(legal_moves)  # Changed to random choice
+        best_moves = []
+        best_eval = -float("inf") if self.board.turn == chess.WHITE else float("inf")
         maximizing = self.board.turn == chess.WHITE
         for move in self.order_moves(self.board.legal_moves):
             self.board.push(move)
-            eval = self.alpha_beta(search_depth - 1, -float('inf'), float('inf'), not maximizing)
+            eval = self.alpha_beta(
+                search_depth - 1, -float("inf"), float("inf"), not maximizing
+            )
             self.board.pop()
-            if (maximizing and eval > best_eval) or (not maximizing and eval < best_eval):
+            if (maximizing and eval > best_eval) or (
+                not maximizing and eval < best_eval
+            ):
                 best_eval = eval
-                best_move_found = move
-        return best_move_found or random.choice(list(self.board.legal_moves))
+                best_moves = [move]
+            elif eval == best_eval:
+                best_moves.append(move)
+        if best_moves:
+            return random.choice(best_moves)
+        else:
+            return random.choice(list(self.board.legal_moves))
 
     def alpha_beta(self, depth, alpha, beta, maximizing_player):
         if depth == 0 or self.board.is_game_over():
             return self.evaluate_board()
         if maximizing_player:
-            max_eval = -float('inf')
+            max_eval = -float("inf")
             for move in self.order_moves(self.board.legal_moves):
                 self.board.push(move)
-                eval = self.alpha_beta(depth-1, alpha, beta, False)
+                eval = self.alpha_beta(depth - 1, alpha, beta, False)
                 self.board.pop()
                 max_eval = max(max_eval, eval)
                 alpha = max(alpha, eval)
@@ -320,10 +765,10 @@ class AIWorker(QObject):
                     break
             return max_eval
         else:
-            min_eval = float('inf')
+            min_eval = float("inf")
             for move in self.order_moves(self.board.legal_moves):
                 self.board.push(move)
-                eval = self.alpha_beta(depth-1, alpha, beta, True)
+                eval = self.alpha_beta(depth - 1, alpha, beta, True)
                 self.board.pop()
                 min_eval = min(min_eval, eval)
                 beta = min(beta, eval)
@@ -337,17 +782,31 @@ class AIWorker(QObject):
             piece = self.board.piece_at(square)
             if piece:
                 color_factor = 1 if piece.color == chess.WHITE else -1
-                table_square = square if piece.color == chess.WHITE else chess.square_mirror(square)
+                table_square = (
+                    square
+                    if piece.color == chess.WHITE
+                    else chess.square_mirror(square)
+                )
                 if piece.piece_type == chess.PAWN:
-                    eval_score += PAWN_TABLE[table_square] * color_factor + 100 * color_factor
+                    eval_score += (
+                        PAWN_TABLE[table_square] * color_factor + 100 * color_factor
+                    )
                 elif piece.piece_type == chess.KNIGHT:
-                    eval_score += KNIGHT_TABLE[table_square] * color_factor + 300 * color_factor
+                    eval_score += (
+                        KNIGHT_TABLE[table_square] * color_factor + 300 * color_factor
+                    )
                 elif piece.piece_type == chess.BISHOP:
-                    eval_score += BISHOP_TABLE[table_square] * color_factor + 300 * color_factor
+                    eval_score += (
+                        BISHOP_TABLE[table_square] * color_factor + 300 * color_factor
+                    )
                 elif piece.piece_type == chess.ROOK:
-                    eval_score += ROOK_TABLE[table_square] * color_factor + 500 * color_factor
+                    eval_score += (
+                        ROOK_TABLE[table_square] * color_factor + 500 * color_factor
+                    )
                 elif piece.piece_type == chess.QUEEN:
-                    eval_score += QUEEN_TABLE[table_square] * color_factor + 900 * color_factor
+                    eval_score += (
+                        QUEEN_TABLE[table_square] * color_factor + 900 * color_factor
+                    )
                 elif piece.piece_type == chess.KING:
                     eval_score += KING_TABLE[table_square] * color_factor
         return eval_score
@@ -364,7 +823,8 @@ class AIWorker(QObject):
         scored_moves.sort(key=lambda x: x[0], reverse=True)
         return [move for score, move in scored_moves]
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     app = QApplication([])
     window = ChessAI()
     window.show()
