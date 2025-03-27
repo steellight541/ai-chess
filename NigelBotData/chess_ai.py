@@ -13,7 +13,6 @@ import os
 
 
 
-
 class NigelChessBot:
     def __init__(self) -> None: # type: ignore
         """Initialize with enhanced features and search capabilities"""
@@ -45,7 +44,18 @@ class NigelChessBot:
         self.move_history = []
         self.position_counts = {}
         
-        self.model = RandomForestClassifier(n_estimators=150, max_depth=12, min_samples_split=5, random_state=42, n_jobs=-1)
+        self.model = RandomForestClassifier(
+            n_estimators=300,      # Meer bomen voor complexe posities
+            max_depth=15,          # Diepere analyse van zetsequenties
+            min_samples_split=10,  # Minder overfitting op zeldzame patronen
+            class_weight='balanced', # Compenseer onbalans in zetkeuzes
+            max_features='log2',   # Betere feature-selectie voor 12 features
+            min_samples_leaf=3,    # Stabilere bladnodes
+            bootstrap=True,        # Betere generalisatie met bootstrap
+            oob_score=True,        # Valideer met out-of-bag data
+            random_state=42,
+            n_jobs=-1
+        )
 
 
     def update_history(self, board):
@@ -366,6 +376,7 @@ class NigelChessBot:
         return bot
 
 
+
 class ChessAi:
     def __init__(self):
         self.ai = NigelChessBot()
@@ -392,9 +403,9 @@ def train_set(bot) -> NigelChessBot:
         
         game.headers["Result"] = board.result()
         training_games.append(game)
+        print(f"\rTraining on {len(training_games)} games...", end="")
     
     # Train the bot
-    print(f"Training on {len(training_games)} games...")
     num_positions = bot.train(training_games)
     print(f"Trained on {num_positions} board positions.")
     return bot
@@ -407,7 +418,7 @@ if __name__ == "__main__":
     
     # Create some training games (in practice, load from PGN)
     training_games = []
-    for _ in range(100):  # Create 10 random games for demo
+    for _ in range(1):  # Create 10 random games for demo
         board = chess.Board()
         game = chess.pgn.Game()
         node = game
@@ -419,6 +430,8 @@ if __name__ == "__main__":
         
         game.headers["Result"] = board.result()
         training_games.append(game)
+        # update game count to show progress by retracting the last print and printing the new count
+        print(f"\rTraining on {len(training_games)} games...", end="")
     
     # Train the bot
     print(f"Training on {len(training_games)} games...")
