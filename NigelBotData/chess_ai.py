@@ -193,7 +193,7 @@ class NigelChessBot:
                     return move
         
         # If no immediate tactics found, use hybrid approach
-        if np.random.random() < 0.7:
+        if np.random.random() < 0.5:
             search_result, _ = self.search_move(board, depth=2)  # Unpack tuple
             if search_result:
                 return search_result
